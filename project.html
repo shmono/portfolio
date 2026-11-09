@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project | Seohyun Kim</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body class="project-detail-page">
+  <!-- 이전 메인 페이지로 돌아가는 버튼: 아이콘 파일은 back.svg입니다. -->
+  <a class="back-button" href="index.html" aria-label="메인 페이지로 돌아가기">
+    <img src="back.svg" alt="">
+  </a>
+
+  <!-- ================= 프로젝트 상세 페이지 전체 영역 ================= -->
+  <main class="project-detail case-study">
+    <!-- 상단 프로젝트 소개 영역: 번호, 제목, 부제목, 프로젝트 정보를 포함합니다. -->
+    <header class="case-study-header">
+      <div class="case-study-heading">
+        <!-- 프로젝트 순서 번호 -->
+        <p class="case-study-number">01</p>
+
+        <!-- 프로젝트 메인 제목과 한 줄 설명 -->
+        <div class="case-study-title">
+          <h1>CS 제로를 만든 ‘소개팅 일정 투표’ 경험 개편</h1>
+          <p>: 부족하지도 과하지도 않은 ‘충분한’ 정보를 보여주는 UI를 찾아서</p>
+        </div>
+      </div>
+
+      <!-- 프로젝트 기본 정보: 항목을 추가하려면 case-study-meta-item 블록을 복사하세요. -->
+      <dl class="case-study-meta">
+        <!-- 프로젝트 작업 유형 -->
+        <div class="case-study-meta-item">
+          <dt>Category</dt>
+          <dd>팀 작업(듀리안)</dd>
+        </div>
+        <!-- 프로젝트에서 담당한 역할 -->
+        <div class="case-study-meta-item">
+          <dt>Role</dt>
+          <dd>리서치 및 문제정의, UXUI 디자인(100%)</dd>
+        </div>
+        <!-- 프로젝트 진행 기간 -->
+        <div class="case-study-meta-item">
+          <dt>Period</dt>
+          <dd>2026.4</dd>
+        </div>
+      </dl>
+    </header>
+
+    <!-- ================= 프로젝트 본문 ================= -->
+    <div class="case-study-content">
+      <!-- Overview: 대표 이미지와 프로젝트 개요 설명 -->
+      <section class="case-section case-reveal">
+        <!-- 대표 이미지 자리: 실제 이미지 사용 시 이 div를 img 태그로 교체하세요. -->
+        <div class="case-image-placeholder" role="img" aria-label="프로젝트 대표 이미지 영역"></div>
+
+        <!-- Overview 라벨과 설명문 -->
+        <div class="case-section-copy">
+          <p class="case-eyebrow">Overview</p>
+          <p>
+            듀리안에서는 만날 상대와 채팅하는 기능이 없어 투표를 통해 각자 가능한 장소와
+            일정을 선택하고 겹치는 일정을 찾아 만남 일정을 확정합니다. 이 과정 중 ‘장소와
+            일정 투표’ 화면에서 VOC가 지속적으로 들어와 PM의 제안으로 만남 일정을 투표하는
+            단계의 문제점을 검토해 보기로 회의에서 결정하였습니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- 본문 섹션 사이의 가로 구분선 -->
+      <hr class="case-divider">
+
+      <!-- Background: 문제 배경, 관련 이미지, 상세 설명 -->
+      <section class="case-section case-reveal">
+        <!-- 섹션 라벨, 제목, 도입 설명 -->
+        <div class="case-section-heading">
+          <p class="case-eyebrow">Background</p>
+          <h2>가장 궁금한 정보가 보이지 않는 화면</h2>
+          <p>
+            듀리안에는 유저 간 채팅 기능이 존재하지 않아요. 그래서 소개팅 상대와 만날 약속을
+            정할 때도 채팅으로 일정을 조율하는 대신, 각자 약속에 나갈 수 있는 날짜와 장소를
+            선택하는 ‘일정 투표’를 통해 소개팅 일정을 정하게 됩니다.
+          </p>
+        </div>
+
+        <!-- 설명 이미지와 이미지 캡션 -->
+        <figure class="case-figure">
+          <!-- 실제 이미지 사용 시 이 div를 img 태그로 교체하세요. -->
+          <div class="case-image-placeholder" role="img" aria-label="기존 일정 투표 화면 이미지 영역"></div>
+          <figcaption>기존 일정 투표 화면</figcaption>
+        </figure>
+
+        <!-- Background의 긴 본문: 문단은 p 태그 단위로 추가할 수 있습니다. -->
+        <div class="case-body-copy">
+          <p>
+            그런데 이 일정 투표 단계에서 특히 CS가 많이 들어오고 있었어요. 겹치는 일정이
+            없어서 매칭이 취소된 경우, 상대방이 어떤 날짜나 장소를 선택했는지 알 수 없어서
+            상대가 가능한 시간에 맞춰 바꿀 수 없다는 의견이 여럿 있었어요. 그래서 운영자가
+            투표 데이터를 확인하고, 이를 유저들에게 전달하고, 일정을 수동으로 조율하는 등
+            번거로운 일들이 종종 발생했어요.
+          </p>
+          <p>
+            일정 투표 시 유저가 가장 궁금한 정보는 ‘상대가 어떤 날짜와 시간, 장소에
+            투표했는지’예요. 이 정보가 보이지 않는 기존 화면에 문제가 크다는 걸 알게 된 후,
+            일정 투표 화면을 수정해 보기로 했어요.
+          </p>
+        </div>
+      </section>
+
+      <!-- 본문 섹션 사이의 가로 구분선 -->
+      <hr class="case-divider">
+
+      <!-- Insight: 프로젝트에서 얻은 핵심 인사이트 -->
+      <section class="case-section case-reveal">
+        <div class="case-section-heading">
+          <p class="case-eyebrow">Insight</p>
+          <h2>덜어내기가 중요해</h2>
+          <p>
+            투표 현황이나 캘린더 UI가 지면에서 이미 큰 부분을 차지하고 있기 때문에 처음에는
+            새로운 페이지로 이동시키거나, 바텀시트에서 상대가 선택한 일정을 보여주는 방식을
+            떠올렸어요. 하지만 상대가 선택한 일정을 확인하면서 동시에 내가 가능한 일정을
+            선택해야 하는데, 투표가 이루어지는 화면과 투표 내용 확인 화면을 분리할 경우
+            왔다 갔다 해야 하는 불편함의 우려가 컸어요.
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 상세 페이지에서도 항상 좌측 하단에 표시되는 카피라이트 -->
+  <footer class="copy">© 2026</footer>
+</body>
+</html>
