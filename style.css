@@ -19,10 +19,10 @@
     타이틀(ABOUT ME / PROJECTS / RESUME)과 그 아래 가로선 사이 간격 조절
     숫자를 크게 하면 간격이 넓어지고, 작게 하면 좁아져요. (예: 168px → 200px)
   */
-  --header-line-gap: 100px;
+  --header-line-gap: 64px;
 
   /* 반응형 전환 전후에도 타이틀 아래 가로선 위치를 동일하게 유지 */
-  --header-line-gap-mobile: var(--header-line-gap);
+  --header-line-gap-mobile: 64px;
 
   --project-dim-duration: 120ms;
   --project-button-duration: 120ms;
