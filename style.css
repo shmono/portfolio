@@ -712,7 +712,7 @@ body.project-detail-page {
   display: table;
   margin-top: 12px;
   padding: 5px 10px;
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--grey-100);
   color: var(--grey-600);
   font-size: 13px;
