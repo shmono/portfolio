@@ -123,6 +123,7 @@ const SPRING_BASIC = MOTION_SPRING.basic;
 const SPRING_SLOW = MOTION_SPRING.slow;
 const PROJECT_REVEAL_STAGGER_MS = 100; /* 항목 사이의 순차 등장 간격 */
 const PROJECT_REVEAL_OFFSET_PX = 40; /* 프로젝트가 올라오기 시작하는 아래쪽 거리 */
+let shouldSkipProjectReveal = false;
 
 const revealProjectWithSpring = (project, delay) => {
   const { stiffness, damping, mass } = SPRING_SLOW;
@@ -132,6 +133,13 @@ const revealProjectWithSpring = (project, delay) => {
   let velocity = 0;
 
   const update = (time) => {
+    if (shouldSkipProjectReveal) {
+      project.style.opacity = '';
+      project.style.transform = '';
+      project.classList.remove('is-entering');
+      return;
+    }
+
     if (time < startsAt) {
       requestAnimationFrame(update);
       return;
@@ -176,6 +184,35 @@ if (projectItems.length && !reduceMotion.matches) {
     });
   });
 }
+
+/* 상세 페이지에서 브라우저 뒤로가기로 복원될 때 숨겨진 전환 상태를 즉시 정리합니다. */
+const resetMainPageAfterTransition = () => {
+  const mainPage = document.querySelector('.app');
+
+  shouldSkipProjectReveal = true;
+  document.body.classList.remove('is-page-leaving');
+  document.querySelectorAll('.page-transition-detail, .page-transition').forEach((layer) => layer.remove());
+
+  if (mainPage) {
+    mainPage.style.opacity = '';
+    mainPage.style.transform = '';
+  }
+
+  projectItems.forEach((project) => {
+    project.classList.remove('is-entering');
+    project.style.opacity = '';
+    project.style.transform = '';
+  });
+};
+
+window.addEventListener('pageshow', (event) => {
+  const isReturningFromProject = sessionStorage.getItem('project-returning-to-main') === 'true';
+
+  if (!event.persisted && !isReturningFromProject) return;
+
+  sessionStorage.removeItem('project-returning-to-main');
+  resetMainPageAfterTransition();
+});
 
 const activateSection = (tab) => {
   const panelId = tab.dataset.tab;
@@ -575,6 +612,12 @@ const startProjectPageTransition = (thumb) => {
     hasNavigated = true;
     window.removeEventListener('message', handleDetailRevealComplete);
     sessionStorage.setItem('project-transition-destination', destination);
+
+    /* 히스토리에 숨겨진 iframe과 opacity 0 상태가 저장되지 않도록 이동 전에 복구합니다. */
+    detailPage.remove();
+    document.body.classList.remove('is-page-leaving');
+    currentPage.style.opacity = '';
+    currentPage.style.transform = '';
     window.location.href = destination;
   };
 
@@ -656,6 +699,7 @@ if (backButton) {
 
     if (cameFromMainPage) {
       event.preventDefault();
+      sessionStorage.setItem('project-returning-to-main', 'true');
       window.history.back();
     }
   });
