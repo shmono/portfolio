@@ -314,15 +314,8 @@ if (projectDetailPage) {
     firstCaseSection?.querySelector('.case-image-placeholder'),
     firstCaseSection?.querySelector('.case-section-copy'),
   ].filter(Boolean);
-  const isTransitionPreview = window.self !== window.top;
-  const transitionDestination = sessionStorage.getItem('project-transition-destination');
-  const skipEntryFade = transitionDestination === window.location.href;
   let hasStartedSequence = false;
   let hasStartedScrollReveal = false;
-
-  if (skipEntryFade) {
-    sessionStorage.removeItem('project-transition-destination');
-  }
 
   projectDetailPage.classList.add('is-ready');
   sequenceItems.forEach((item) => item.classList.add('detail-sequence-item'));
@@ -348,9 +341,6 @@ if (projectDetailPage) {
 
   const finishSequence = () => {
     beginScrollReveal();
-    if (isTransitionPreview) {
-      window.parent.postMessage({ type: 'project-detail-reveal-complete' }, '*');
-    }
   };
 
   const startSequence = () => {
@@ -369,17 +359,7 @@ if (projectDetailPage) {
     });
   };
 
-  if (skipEntryFade) {
-    sequenceItems.forEach((item) => item.classList.add('is-visible'));
-    hasStartedSequence = true;
-    beginScrollReveal();
-  } else if (isTransitionPreview) {
-    window.addEventListener('message', (event) => {
-      if (event.data?.type === 'start-project-detail-reveal') startSequence();
-    });
-  } else {
-    requestAnimationFrame(() => requestAnimationFrame(startSequence));
-  }
+  requestAnimationFrame(() => requestAnimationFrame(startSequence));
 }
 
 const compileRippleShader = (gl, type, source) => {
@@ -588,8 +568,7 @@ const playContentRipple = (thumb, event, onComplete) => {
 const startProjectPageTransition = (thumb) => {
   const destination = thumb.href;
   const currentPage = document.querySelector('.app');
-  const detailPage = document.createElement('iframe');
-  const TRANSITION_TIMEOUT_MS = 5000;
+  const TRANSITION_TIMEOUT_MS = 2000;
   let hasNavigated = false;
 
   if (!currentPage) {
@@ -597,31 +576,12 @@ const startProjectPageTransition = (thumb) => {
     return;
   }
 
-  detailPage.className = 'page-transition-detail';
-  detailPage.setAttribute('aria-hidden', 'true');
-  detailPage.tabIndex = -1;
-
-  const handleDetailRevealComplete = (event) => {
-    if (event.source !== detailPage.contentWindow
-      || event.data?.type !== 'project-detail-reveal-complete') return;
-    navigate();
-  };
-
   const navigate = () => {
     if (hasNavigated) return;
     hasNavigated = true;
-    window.removeEventListener('message', handleDetailRevealComplete);
-    sessionStorage.setItem('project-transition-destination', destination);
-
-    /* 히스토리에 숨겨진 iframe과 opacity 0 상태가 저장되지 않도록 이동 전에 복구합니다. */
-    detailPage.remove();
-    document.body.classList.remove('is-page-leaving');
-    currentPage.style.opacity = '';
-    currentPage.style.transform = '';
+    resetMainPageAfterTransition();
     window.location.href = destination;
   };
-
-  window.addEventListener('message', handleDetailRevealComplete);
 
   const stepSpring = (state, spring, deltaTime) => {
     const springForce = -spring.stiffness * (state.value - 1);
@@ -632,48 +592,37 @@ const startProjectPageTransition = (thumb) => {
     state.value += state.velocity * deltaTime;
   };
 
-  detailPage.addEventListener('load', () => {
-    document.body.classList.add('is-page-leaving');
+  document.body.classList.add('is-page-leaving');
 
-    const startedAt = performance.now();
-    const oldPage = { value: 0, velocity: 0 };
-    let previousTime = startedAt;
+  const startedAt = performance.now();
+  const oldPage = { value: 0, velocity: 0 };
+  let previousTime = startedAt;
 
-    const renderPageTransition = (time) => {
-      const deltaTime = Math.min(Math.max((time - previousTime) / 1000, 0), 1 / 30);
-      previousTime = time;
+  const renderPageTransition = (time) => {
+    const deltaTime = Math.min(Math.max((time - previousTime) / 1000, 0), 1 / 30);
+    previousTime = time;
 
-      stepSpring(oldPage, SPRING_SLOW, deltaTime);
+    stepSpring(oldPage, SPRING_SLOW, deltaTime);
 
-      const oldProgress = Math.min(1, Math.max(0, oldPage.value));
-      /* spring slow 시작 후 약 1.2초에 화면을 0%로 고정하고 다음 시퀀스를 시작합니다. */
-      const oldSettled = oldProgress >= 0.993;
+    const oldProgress = Math.min(1, Math.max(0, oldPage.value));
+    /* spring slow 시작 후 약 1.2초에 실제 상세 페이지로 한 번만 이동합니다. */
+    const oldSettled = oldProgress >= 0.993;
 
-      currentPage.style.opacity = String(1 - oldProgress);
-      currentPage.style.transform = `translateZ(0) scale(${1 - oldProgress * 0.06})`;
+    currentPage.style.opacity = String(1 - oldProgress);
+    currentPage.style.transform = `translateZ(0) scale(${1 - oldProgress * 0.06})`;
 
-      if (!oldSettled) {
-        requestAnimationFrame(renderPageTransition);
-        return;
-      }
+    if (!oldSettled) {
+      requestAnimationFrame(renderPageTransition);
+      return;
+    }
 
-      currentPage.style.opacity = '0';
-      currentPage.style.transform = 'translateZ(0) scale(0.94)';
+    currentPage.style.opacity = '0';
+    currentPage.style.transform = 'translateZ(0) scale(0.94)';
+    requestAnimationFrame(navigate);
+  };
 
-      /* 기존 화면이 0%로 렌더링된 다음 프레임부터 상세 페이지 시퀀스를 시작합니다. */
-      requestAnimationFrame(() => {
-        detailPage.style.opacity = '1';
-        detailPage.contentWindow?.postMessage({ type: 'start-project-detail-reveal' }, '*');
-      });
-    };
-
-    requestAnimationFrame(renderPageTransition);
-    window.setTimeout(navigate, TRANSITION_TIMEOUT_MS + 100);
-  }, { once: true });
-
-  detailPage.addEventListener('error', navigate, { once: true });
-  detailPage.src = destination;
-  document.body.append(detailPage);
+  requestAnimationFrame(renderPageTransition);
+  window.setTimeout(navigate, TRANSITION_TIMEOUT_MS);
 };
 
 projectThumbs.forEach((thumb) => {
@@ -684,7 +633,7 @@ projectThumbs.forEach((thumb) => {
 
     event.preventDefault();
 
-    if (document.querySelector('.page-transition-detail')) return;
+    if (document.body.classList.contains('is-page-leaving')) return;
 
     startProjectPageTransition(thumb);
   });
