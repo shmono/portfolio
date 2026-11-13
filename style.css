@@ -874,6 +874,7 @@ body.project-detail-page {
 
   .about-body {
     gap: var(--space);
+    padding-bottom: 48px;
   }
 
   .intro {
