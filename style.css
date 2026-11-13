@@ -17,6 +17,7 @@
   --grey-400: #B4B4B4;
   --grey-500: #8E8E8E;
   --grey-600: #676767;
+  --grey-700: #424242;
   --grey-950: #171717;
 
   /* Transitions.dev — Tabs sliding */
@@ -153,12 +154,13 @@ a {
 
 .name {
   font-size: 18px;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 24px;
 }
 
 .intro {
   margin-top: 4px;
+  color: var(--grey-700);
   word-break: keep-all;
 }
 
@@ -221,8 +223,26 @@ a {
   grid-template-columns: 72px minmax(0, 1fr) minmax(180px, 31%);
   gap: var(--space);
   align-items: start;
-  padding: 16px 0 16px;
+  margin: 0 calc(var(--page-gutter) * -1);
+  padding: 16px var(--page-gutter);
   border-bottom: 1px solid var(--line);
+  transition: background var(--project-dim-duration) var(--out);
+}
+
+.project:hover,
+.project:focus-visible,
+.project:active {
+  background: var(--grey-100);
+}
+
+.col-projects .project:last-child,
+.col-resume .row:last-child {
+  border-bottom: 0;
+}
+
+.project:focus-visible {
+  outline: 1px solid var(--grey-950);
+  outline-offset: -1px;
 }
 
 /* 첫 진입 시 프로젝트가 spring slow 모션으로 등장하기 전 상태 */
@@ -248,18 +268,6 @@ a {
   overflow: hidden;
 }
 
-/* 이미지 hover 시 표시되는 dim: 색상과 불투명도만 적용 */
-.thumb::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: rgba(20, 20, 20, 0.42);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--project-dim-duration) ease-in-out;
-}
-
 /* 클릭 지점에서 퍼지는 내부 이미지 일렁임 레이어 */
 .thumb-content-ripple-canvas {
   position: absolute;
@@ -272,21 +280,9 @@ a {
   pointer-events: none;
 }
 
-.thumb.is-content-rippling::after,
-.thumb.is-content-rippling:hover::after,
-.thumb.is-content-rippling .project-link,
-.thumb.is-content-rippling:hover .project-link {
-  opacity: 0;
-}
-
 /* 이미지가 들어간 첫 번째 박스의 배경색 */
 .thumb-white {
   background: #1C1E22;
-}
-
-.thumb:hover::after,
-.thumb:focus-visible::after {
-  opacity: 1;
 }
 
 .thumb img {
@@ -315,86 +311,37 @@ a {
 
 .desc {
   margin-top: 4px;
+  color: var(--grey-600);
   word-break: keep-all;
 }
 
-.year {
-  margin-top: 4px;
-  color: var(--text);
+.project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-/* hover 시 가운데 표시되는 View 버튼 */
-.project-link {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 2;
-  gap: clamp(3px, 2cqi, 6px);
-  padding: clamp(6px, calc(2.5cqi + 2px), 10px) clamp(8px, 5cqi, 16px);
-  border: 0;
-  background: rgba(255, 255, 255, 0.36);
-  color: #ffffff;
-  font-size: clamp(11px, 7cqi, 18px);
-  line-height: 1;
+.project-chip {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--grey-100);
+  color: var(--grey-600);
+  font-size: 13px;
+  line-height: 18px;
   white-space: nowrap;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(0.96);
-  -webkit-backdrop-filter: blur(var(--project-button-blur));
-  backdrop-filter: blur(var(--project-button-blur));
-  transition:
-    opacity var(--project-button-duration) ease-in-out,
-    transform var(--project-button-duration) ease-in-out;
+  transition: background var(--project-dim-duration) var(--out);
 }
 
-.project-link .ico-r {
-  width: clamp(10px, 6cqi, 16px);
-  height: auto;
-}
-
-.thumb:hover .project-link,
-.thumb:focus-visible .project-link {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-/* 빛 효과: 700ms 이동 후 350ms 간격으로 반복 */
-.project-link::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  bottom: -50%;
-  left: -55%;
-  width: 42%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.09), transparent);
-  transform: translateX(-150%) skewX(-18deg);
-}
-
-.thumb:hover .project-link::after,
-.thumb:focus-visible .project-link::after {
-  animation: project-button-shine var(--project-shine-cycle) ease-in-out infinite;
-}
-
-@keyframes project-button-shine {
-  0% {
-    transform: translateX(-150%) skewX(-18deg);
-  }
-  66.666% {
-    transform: translateX(430%) skewX(-18deg);
-  }
-  100% {
-    transform: translateX(430%) skewX(-18deg);
-  }
+.project:hover .project-chip,
+.project:focus-visible .project-chip,
+.project:active .project-chip {
+  background: var(--grey-200);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .thumb > img {
     transform: none !important;
-  }
-
-  .project-link::after {
-    animation: none !important;
   }
 
   .thumb-content-ripple-canvas {
@@ -717,9 +664,8 @@ body.project-detail-page {
   border-bottom: 1px solid var(--line);
 }
 
-/* Resume의 학교명과 경력명 굵기 */
-.value > p,
-.experience-item > p {
+/* Resume의 학교 정보 */
+.value > p {
   color: var(--grey-600);
   font-size: 15px;
   line-height: 22px;
@@ -729,6 +675,43 @@ body.project-detail-page {
   color: var(--grey-950);
   font-size: 15px;
   font-weight: 600;
+}
+
+.experience-company,
+.experience-role,
+.experience-description {
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.experience-company {
+  color: var(--grey-950);
+  font-weight: 600;
+}
+
+.experience-company a {
+  text-decoration-line: underline;
+  text-decoration-color: var(--grey-400);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: text-decoration-color var(--project-dim-duration) var(--out);
+}
+
+.experience-company a:hover,
+.experience-company a:focus-visible {
+  text-decoration-color: var(--grey-950);
+}
+
+.experience-role {
+  margin-top: 4px;
+  color: var(--grey-950);
+  font-weight: 400;
+}
+
+.experience-description {
+  margin-top: 4px;
+  color: var(--grey-500);
+  font-weight: 400;
 }
 
 .value .date {
@@ -746,13 +729,12 @@ body.project-detail-page {
 /* Experiences 항목을 추가하면 48px 간격으로 아래에 이어집니다. */
 .experience-list {
   display: grid;
-  gap: calc(var(--space) * 1);
+  gap: 32px;
 }
 
 /* ---------- 좁은 화면 (태블릿/모바일): 상단 탭으로 섹션 전환 ---------- */
 @media (min-width: 1201px) {
-  .col-about .col-head,
-  .name-korean {
+  .col-about .col-head {
     display: none;
   }
 
@@ -764,6 +746,16 @@ body.project-detail-page {
   .col-resume .col-head h2,
   .project-number {
     font-size: 18px;
+  }
+
+  .col-projects .col-head {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .col-projects .col-head h2 {
+    padding-right: var(--page-gutter);
+    padding-left: var(--page-gutter);
   }
 }
 
@@ -861,9 +853,9 @@ body.project-detail-page {
   .col-about::after {
     content: "";
     position: absolute;
-    right: var(--page-gutter);
+    right: 0;
     bottom: 0;
-    left: var(--page-gutter);
+    left: 0;
     height: 1px;
     background: var(--line);
   }
@@ -886,7 +878,7 @@ body.project-detail-page {
   }
 
   .project {
-    padding: 24px 0; /* 각 프로젝트 항목의 위·아래 간격 */
+    padding: 24px var(--page-gutter); /* 각 프로젝트 항목의 위·아래 간격 */
     font-size: 16px;
   }
 

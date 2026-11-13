@@ -594,8 +594,8 @@ const playContentRipple = (thumb, event, onComplete) => {
   drawFrame(startedAt);
 };
 
-const startProjectPageTransition = (thumb) => {
-  const destination = thumb.href;
+const startProjectPageTransition = (project) => {
+  const destination = project.href;
   const currentPage = document.querySelector('.app');
   const TRANSITION_TIMEOUT_MS = 2000;
   let hasNavigated = false;
@@ -655,8 +655,8 @@ const startProjectPageTransition = (thumb) => {
   window.setTimeout(navigate, TRANSITION_TIMEOUT_MS);
 };
 
-projectThumbs.forEach((thumb) => {
-  thumb.addEventListener('click', (event) => {
+projectItems.forEach((project) => {
+  project.addEventListener('click', (event) => {
     const isModifiedClick = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
 
     if (isModifiedClick || event.button !== 0 || reduceMotion.matches) return;
@@ -665,7 +665,7 @@ projectThumbs.forEach((thumb) => {
 
     if (document.body.classList.contains('is-page-leaving')) return;
 
-    startProjectPageTransition(thumb);
+    startProjectPageTransition(project);
   });
 });
 
