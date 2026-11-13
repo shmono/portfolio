@@ -1,8 +1,9 @@
 const PAGE_TRANSITION_MAX_MS = 1600;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const mobileLayout = window.matchMedia('(max-width: 900px)');
+const mobileLayout = window.matchMedia('(max-width: 1200px)');
 const sectionTabs = [...document.querySelectorAll('.section-tab')];
-const sectionPanels = [...document.querySelectorAll('.app > .col')];
+const sectionPanels = [...document.querySelectorAll('.col-projects, .col-resume')];
+const sectionTabsPill = document.querySelector('.t-tabs-pill');
 const projectThumbs = [...document.querySelectorAll('.thumb')];
 const projectItems = [...document.querySelectorAll('.project')];
 
@@ -214,7 +215,24 @@ window.addEventListener('pageshow', (event) => {
   resetMainPageAfterTransition();
 });
 
-const activateSection = (tab) => {
+const moveSectionTabsPill = (tab, animate = true) => {
+  if (!sectionTabsPill || !tab) return;
+
+  if (!animate) {
+    const previousTransition = sectionTabsPill.style.transition;
+    sectionTabsPill.style.transition = 'none';
+    sectionTabsPill.style.transform = `translateX(${tab.offsetLeft}px)`;
+    sectionTabsPill.style.width = `${tab.offsetWidth}px`;
+    void sectionTabsPill.offsetWidth;
+    sectionTabsPill.style.transition = previousTransition;
+    return;
+  }
+
+  sectionTabsPill.style.transform = `translateX(${tab.offsetLeft}px)`;
+  sectionTabsPill.style.width = `${tab.offsetWidth}px`;
+};
+
+const activateSection = (tab, animatePill = true) => {
   const panelId = tab.dataset.tab;
 
   sectionTabs.forEach((item) => {
@@ -227,6 +245,8 @@ const activateSection = (tab) => {
   sectionPanels.forEach((panel) => {
     panel.classList.toggle('is-active', panel.id === panelId);
   });
+
+  moveSectionTabsPill(tab, animatePill);
 
   if (mobileLayout.matches) {
     window.scrollTo(0, 0);
@@ -253,11 +273,20 @@ sectionTabs.forEach((tab, index) => {
 });
 
 const projectsTab = sectionTabs.find((tab) => tab.dataset.tab === 'projects-panel');
+const activeSectionTab = () => sectionTabs.find((tab) => tab.getAttribute('aria-selected') === 'true');
+
+requestAnimationFrame(() => {
+  moveSectionTabsPill(activeSectionTab(), false);
+});
+
+window.addEventListener('resize', () => {
+  moveSectionTabsPill(activeSectionTab(), false);
+});
 
 /* 데스크톱에서 태블릿/모바일 크기로 진입할 때마다 Projects를 첫 화면으로 표시 */
 mobileLayout.addEventListener('change', (event) => {
   if (event.matches && projectsTab) {
-    activateSection(projectsTab);
+    activateSection(projectsTab, false);
   }
 });
 

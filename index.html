@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Seohyun Kim | UX/UI Designer</title>
-  <link rel="stylesheet" href="style.css?v=20261113-7">
-  <script src="script.js?v=20261113-3" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261113-8">
+  <script src="script.js?v=20261113-4" defer></script>
 </head>
 <body>
 
   <div class="app">
 
-    <nav class="section-tabs" aria-label="포트폴리오 섹션" role="tablist">
-      <button class="section-tab" type="button" role="tab" aria-selected="false" aria-controls="about-panel" data-tab="about-panel" tabindex="-1">About me</button>
-      <button class="section-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="projects-panel" data-tab="projects-panel">Projects</button>
-      <button class="section-tab" type="button" role="tab" aria-selected="false" aria-controls="resume-panel" data-tab="resume-panel" tabindex="-1">Resume</button>
+    <nav class="section-tabs t-tabs" aria-label="포트폴리오 섹션" role="tablist">
+      <span class="t-tabs-pill" aria-hidden="true"></span>
+      <button class="section-tab t-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="projects-panel" data-tab="projects-panel">Project</button>
+      <button class="section-tab t-tab" type="button" role="tab" aria-selected="false" aria-controls="resume-panel" data-tab="resume-panel" tabindex="-1">Resume</button>
     </nav>
 
     <!-- ================= ABOUT ME ================= -->
@@ -26,12 +26,12 @@
 
       <div class="about-body">
         <div>
-          <h1 class="name">Seohyun Kim (김서현)</h1>
+          <h1 class="name">Seohyun Kim<span class="name-korean"> (김서현)</span></h1>
           <p class="intro">
-            홍익대학교 시각디자인학과 졸업 후 소개팅 서비스 ‘듀리안’ 창업팀에서
-            프로덕트 디자이너로 활동하고 있습니다.<br><br>
+            <span>홍익대학교 시각디자인학과 졸업 후 소개팅 서비스 ‘듀리안’ 창업팀에서
+            프로덕트 디자이너로 활동하고 있습니다.</span><span class="intro-extra"><br><br>
             최근에는 말차라떼 만들기와 웹소설 읽기에 빠져 있습니다.<br><br>
-            icclisa1234@gmail.com
+            icclisa1234@gmail.com</span>
           </p>
 
           <div class="pills">
@@ -52,7 +52,7 @@
     <!-- ================= PROJECTS ================= -->
     <section class="col col-projects is-active" id="projects-panel" role="tabpanel">
       <header class="col-head">
-        <h2>Projects</h2>
+        <h2>Project</h2>
       </header>
 
       <div class="list">

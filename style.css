@@ -1,10 +1,23 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
 :root {
+  --grey-0: #FFFFFF;
   --grey-100: #F4F4F4;
+  --grey-200: #E8E8E8;
   --grey-300: #D1D1D1;
+  --grey-400: #B4B4B4;
+  --grey-500: #8E8E8E;
   --grey-600: #676767;
   --grey-950: #171717;
+
+  /* Transitions.dev — Tabs sliding */
+  --tabs-dur: 250ms;
+  --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tabs-text-muted: var(--grey-500);
+  --tabs-text-hover: var(--grey-400);
+  --tabs-text-active: var(--grey-950);
+  --tabs-bar-bg: var(--grey-950);
+  --tabs-pill-bg: var(--grey-0);
 
   --text: var(--grey-950);
   --line: var(--grey-300);
@@ -19,6 +32,7 @@
 
   /* 모든 간격은 이 값(4의 배수)을 기준으로 맞춰요 */
   --space: 24px;
+  --page-gutter: 24px;
 
   /*
     타이틀(ABOUT ME / PROJECTS / RESUME)과 그 아래 가로선 사이 간격 조절
@@ -106,7 +120,7 @@ a {
   z-index: 10;
   flex: none;
   background: #ffffff;
-  padding: 0 var(--space);
+  padding: 0 var(--page-gutter);
 }
 
 .col-head h2 {
@@ -115,7 +129,7 @@ a {
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
-  text-transform: uppercase;
+  text-transform: none;
   border-bottom: 1px solid var(--line);
 }
 
@@ -125,7 +139,7 @@ a {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: var(--space);
+  padding: var(--space) var(--page-gutter);
 }
 
 .name {
@@ -149,7 +163,7 @@ a {
 /* 카피라이트: 화면 크기와 상관없이 항상 왼쪽 하단에 고정 */
 .copy {
   position: fixed;
-  left: var(--space);
+  left: var(--page-gutter);
   bottom: var(--space);
   z-index: 20;
   font-size: 20px;
@@ -189,7 +203,7 @@ a {
 
 /* ---------- 리스트 공통 (Projects / Resume) ---------- */
 .list {
-  padding: 0 var(--space);
+  padding: 0 var(--page-gutter);
 }
 
 /* ---------- PROJECTS ---------- */
@@ -727,6 +741,17 @@ body.project-detail-page {
 }
 
 /* ---------- 좁은 화면 (태블릿/모바일): 상단 탭으로 섹션 전환 ---------- */
+@media (min-width: 1201px) {
+  .col-about .col-head,
+  .name-korean {
+    display: none;
+  }
+
+  .col-about .about-body {
+    padding-top: 0;
+  }
+}
+
 @media (max-width: 1200px) {
   body {
     overflow: auto;
@@ -740,56 +765,67 @@ body.project-detail-page {
     padding-bottom: 72px; /* 하단 고정 카피라이트가 내용을 가리지 않도록 여백 */
   }
 
-  .section-tabs {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    height: calc(var(--header-line-gap-mobile) + var(--space));
-    padding: var(--space) var(--space) 0;
-    background: var(--bg);
+  /* Transitions.dev — Tabs sliding: 하단 고정 내비게이션 */
+  .t-tabs {
+    position: fixed;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    left: 50%;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+    border-radius: 48px;
+    background: var(--tabs-bar-bg);
+    box-shadow: 0 4px 20px rgba(23, 23, 23, 0.08);
+    transform: translateX(-50%);
   }
 
-  .section-tabs::after {
-    content: "";
-    position: absolute;
-    right: var(--space);
-    bottom: 0;
-    left: var(--space);
-    height: 1px;
-    background: var(--line);
-  }
-
-  .section-tab {
-    appearance: none;
-    align-self: start;
-    padding: 0;
+  .t-tab {
+    position: relative;
+    z-index: 1;
+    height: 36px;
+    padding: 4px 16px;
     border: 0;
+    border-radius: 48px;
+    appearance: none;
     background: transparent;
-    color: var(--line);
+    color: var(--tabs-text-muted);
     font: inherit;
-    font-size: 20px;
-    line-height: 24px;
-    text-align: left;
-    text-transform: uppercase;
+    font-size: 15px;
+    line-height: 20px;
+    text-transform: none;
+    transition: color var(--tabs-dur) var(--tabs-ease);
   }
 
-  .section-tab:nth-child(2) {
-    text-align: center;
+  .t-tab:not([aria-selected="true"]):hover {
+    color: var(--tabs-text-hover);
   }
 
-  .section-tab:last-child {
-    text-align: right;
+  .t-tab[aria-selected="true"] {
+    color: var(--tabs-text-active);
   }
 
-  .section-tab.is-active {
-    color: var(--text);
+  .t-tabs-pill {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    z-index: 0;
+    width: 0;
+    height: 36px;
+    border-radius: 48px;
+    background: var(--tabs-pill-bg);
+    pointer-events: none;
+    transform: translateX(0);
+    transition:
+      transform var(--tabs-dur) var(--tabs-ease),
+      width var(--tabs-dur) var(--tabs-ease);
+    will-change: transform, width;
   }
 
   .col {
     display: none;
-    min-height: calc(100vh - var(--header-line-gap-mobile) - var(--space));
+    min-height: 0;
     height: auto;
     overflow: visible;
     border-right: none;
@@ -797,8 +833,13 @@ body.project-detail-page {
     padding-top: 0;
   }
 
+  .col-about,
   .col.is-active {
     display: flex;
+  }
+
+  .col-about {
+    border-bottom: 1px solid var(--line);
   }
 
   .col-head {
@@ -809,32 +850,58 @@ body.project-detail-page {
     gap: var(--space);
   }
 
+  .intro {
+    font-size: 16px;
+  }
+
+  .pills .pill {
+    padding: 3px 7px 3px 9px;
+    font-size: 14px;
+  }
+
   .copy {
-    position: fixed;
-    margin: 0;
+    display: none;
   }
 
   .project {
-    grid-template-columns: 48px minmax(0, 1fr);
     padding: 24px 0; /* 각 프로젝트 항목의 위·아래 간격 */
+    font-size: 16px;
+  }
+
+  .project-number {
+    font-size: 20px;
+  }
+
+  .info h3 {
+    font-size: 18px;
+  }
+
+}
+
+@media (max-width: 1200px) and (prefers-reduced-motion: reduce) {
+  .t-tabs-pill,
+  .t-tab {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .row {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 500px) {
+  .project {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 24px;
   }
 
   .thumb {
     grid-column: 1 / -1;
     width: 100%;
     max-width: none;
-  }
-}
-
-@media (max-width: 520px) {
-  .project {
-    grid-template-columns: 36px minmax(0, 1fr);
-    gap: 24px;
-  }
-
-  .row {
-    grid-template-columns: 96px minmax(0, 1fr);
-    gap: 16px;
   }
 }
 
