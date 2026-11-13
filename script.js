@@ -6,11 +6,121 @@ const sectionPanels = [...document.querySelectorAll('.app > .col')];
 const projectThumbs = [...document.querySelectorAll('.thumb')];
 const projectItems = [...document.querySelectorAll('.project')];
 
+/* ================= 공통 모션 토큰 ================= */
+const MOTION_EASING = Object.freeze({
+  ease: [0.6, 0, 0, 0.6],
+  out: [0.25, 0.1, 0.25, 1],
+  expo: [0.16, 1, 0.3, 1],
+  back: [0.34, 1.56, 0.64, 1],
+});
+
+const MOTION_SPRING = Object.freeze({
+  slow: Object.freeze({ stiffness: 70, damping: 20, mass: 1 }),
+  basic: Object.freeze({ stiffness: 200, damping: 30, mass: 1 }),
+  small: Object.freeze({ stiffness: 480, damping: 50, mass: 1 }),
+  medium: Object.freeze({ stiffness: 270, damping: 25, mass: 1 }),
+  large: Object.freeze({ stiffness: 100, damping: 15, mass: 1 }),
+  quick: Object.freeze({ stiffness: 800, damping: 55, mass: 1 }),
+  rapid: Object.freeze({ stiffness: 1000, damping: 55, mass: 1 }),
+  bounce: Object.freeze({ stiffness: 300, damping: 15, mass: 1 }),
+});
+
+/* ================= 썸네일 이미지 커서 패럴랙스 ================= */
+const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+const CURSOR_IMAGE_MAX_OFFSET = 7;
+const CURSOR_IMAGE_SPRING = MOTION_SPRING.basic;
+
+const setupCursorImageParallax = (thumb) => {
+  const image = thumb.querySelector(':scope > img');
+  if (!image) return null;
+
+  const current = { x: 0, y: 0 };
+  const target = { x: 0, y: 0 };
+  const velocity = { x: 0, y: 0 };
+  let animationFrame = 0;
+  let previousTime = performance.now();
+
+  const render = (time) => {
+    const deltaTime = Math.min(Math.max((time - previousTime) / 1000, 0), 1 / 30);
+    const { stiffness, damping, mass } = CURSOR_IMAGE_SPRING;
+    previousTime = time;
+
+    const accelerationX = (-stiffness * (current.x - target.x) - damping * velocity.x) / mass;
+    const accelerationY = (-stiffness * (current.y - target.y) - damping * velocity.y) / mass;
+
+    velocity.x += accelerationX * deltaTime;
+    velocity.y += accelerationY * deltaTime;
+    current.x += velocity.x * deltaTime;
+    current.y += velocity.y * deltaTime;
+
+    image.style.setProperty('--cursor-image-x', `${current.x.toFixed(3)}px`);
+    image.style.setProperty('--cursor-image-y', `${current.y.toFixed(3)}px`);
+
+    const isSettled = Math.abs(target.x - current.x) < 0.01
+      && Math.abs(target.y - current.y) < 0.01
+      && Math.abs(velocity.x) < 0.01
+      && Math.abs(velocity.y) < 0.01;
+
+    if (isSettled) {
+      current.x = target.x;
+      current.y = target.y;
+      velocity.x = 0;
+      velocity.y = 0;
+      image.style.setProperty('--cursor-image-x', `${target.x}px`);
+      image.style.setProperty('--cursor-image-y', `${target.y}px`);
+      animationFrame = 0;
+      return;
+    }
+
+    animationFrame = requestAnimationFrame(render);
+  };
+
+  const requestRender = () => {
+    if (!animationFrame) {
+      previousTime = performance.now();
+      animationFrame = requestAnimationFrame(render);
+    }
+  };
+
+  const moveTo = (horizontalRatio, verticalRatio) => {
+    target.x = horizontalRatio * CURSOR_IMAGE_MAX_OFFSET;
+    target.y = verticalRatio * CURSOR_IMAGE_MAX_OFFSET;
+    requestRender();
+  };
+
+  const reset = () => {
+    target.x = 0;
+    target.y = 0;
+    requestRender();
+  };
+
+  return { moveTo, reset };
+};
+
+const cursorImageParallaxItems = projectThumbs
+  .map(setupCursorImageParallax)
+  .filter(Boolean);
+
+/* 이미지 박스 밖에서도 화면 전체의 커서 위치를 기준으로 계속 움직입니다. */
+window.addEventListener('pointermove', (event) => {
+  if (!finePointer.matches || reduceMotion.matches) return;
+
+  const horizontalRatio = (event.clientX / window.innerWidth) * 2 - 1;
+  const verticalRatio = (event.clientY / window.innerHeight) * 2 - 1;
+
+  cursorImageParallaxItems.forEach((item) => {
+    item.moveTo(horizontalRatio, verticalRatio);
+  });
+});
+
+document.documentElement.addEventListener('pointerleave', () => {
+  cursorImageParallaxItems.forEach((item) => item.reset());
+});
+
 /* ================= 프로젝트 첫 진입 순차 등장 모션 ================= */
-/* 이미지 박스 → 상세 페이지 확장에 사용하는 spring basic: 200 / 30 */
-const SPRING_BASIC = Object.freeze({ stiffness: 200, damping: 30, mass: 1 });
-/* 이전에 정한 spring slow 값: stiffness 70 / damping 20 */
-const SPRING_SLOW = Object.freeze({ stiffness: 70, damping: 20, mass: 1 });
+/* 이미지 박스 → 상세 페이지 확장에는 basic, 목록 등장에는 slow를 사용합니다. */
+const SPRING_BASIC = MOTION_SPRING.basic;
+const SPRING_SLOW = MOTION_SPRING.slow;
 const PROJECT_REVEAL_STAGGER_MS = 100; /* 항목 사이의 순차 등장 간격 */
 const PROJECT_REVEAL_OFFSET_PX = 40; /* 프로젝트가 올라오기 시작하는 아래쪽 거리 */
 
@@ -116,31 +226,122 @@ mobileLayout.addEventListener('change', (event) => {
 
 const projectDetailPage = document.querySelector('.project-detail-page');
 
+const revealDetailItemWithSpring = (element, delay = 0, onComplete = () => {}) => {
+  const startsAt = performance.now() + delay;
+  const { stiffness, damping, mass } = SPRING_BASIC;
+  let previousTime = startsAt;
+  let progress = 0;
+  let velocity = 0;
+
+  const update = (time) => {
+    if (time < startsAt) {
+      requestAnimationFrame(update);
+      return;
+    }
+
+    const deltaTime = Math.min(Math.max((time - previousTime) / 1000, 0), 1 / 30);
+    previousTime = time;
+
+    const springForce = -stiffness * (progress - 1);
+    const dampingForce = -damping * velocity;
+    const acceleration = (springForce + dampingForce) / mass;
+
+    velocity += acceleration * deltaTime;
+    progress += velocity * deltaTime;
+
+    const visibleProgress = Math.min(1, Math.max(0, progress));
+    element.style.opacity = String(visibleProgress);
+    element.style.transform = `translateY(${(1 - visibleProgress) * 12}px)`;
+
+    if (Math.abs(1 - progress) > 0.001 || Math.abs(velocity) > 0.001) {
+      requestAnimationFrame(update);
+      return;
+    }
+
+    element.classList.add('is-visible');
+    element.style.opacity = '';
+    element.style.transform = '';
+    onComplete();
+  };
+
+  requestAnimationFrame(update);
+};
+
 /* ================= 프로젝트 상세 페이지 등장 모션 ================= */
 if (projectDetailPage) {
-  /* project.html에서 case-reveal 클래스가 붙은 모든 본문 섹션 */
   const revealSections = [...document.querySelectorAll('.case-reveal')];
+  const firstCaseSection = document.querySelector('.case-study-content > .case-section:first-child');
+  const sequenceItems = [
+    document.querySelector('.case-study-heading'),
+    document.querySelector('.case-study-meta'),
+    firstCaseSection?.querySelector('.case-image-placeholder'),
+    firstCaseSection?.querySelector('.case-section-copy'),
+  ].filter(Boolean);
+  const isTransitionPreview = window.self !== window.top;
+  const transitionDestination = sessionStorage.getItem('project-transition-destination');
+  const skipEntryFade = transitionDestination === window.location.href;
+  let hasStartedSequence = false;
+  let hasStartedScrollReveal = false;
 
-  /* 메인 화면의 확장 전환이 끝나고 상세 페이지가 로드된 다음 콘텐츠 표시 */
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => projectDetailPage.classList.add('is-ready'));
-  });
+  if (skipEntryFade) {
+    sessionStorage.removeItem('project-transition-destination');
+  }
 
-  /* 각 본문 섹션이 화면 안으로 들어오면 is-visible 클래스를 붙입니다. */
-  if ('IntersectionObserver' in window && !reduceMotion.matches) {
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        revealObserver.unobserve(entry.target);
-      });
-    }, { threshold: 0.08 });
+  projectDetailPage.classList.add('is-ready');
+  sequenceItems.forEach((item) => item.classList.add('detail-sequence-item'));
 
-    /* 위 threshold 숫자를 키우면 섹션이 더 많이 보인 뒤 등장합니다. */
-    revealSections.forEach((section) => revealObserver.observe(section));
+  const beginScrollReveal = () => {
+    if (hasStartedScrollReveal) return;
+    hasStartedScrollReveal = true;
+
+    if ('IntersectionObserver' in window && !reduceMotion.matches) {
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          revealObserver.unobserve(entry.target);
+          revealDetailItemWithSpring(entry.target);
+        });
+      }, { threshold: 0.08 });
+
+      revealSections.forEach((section) => revealObserver.observe(section));
+    } else {
+      revealSections.forEach((section) => section.classList.add('is-visible'));
+    }
+  };
+
+  const finishSequence = () => {
+    beginScrollReveal();
+    if (isTransitionPreview) {
+      window.parent.postMessage({ type: 'project-detail-reveal-complete' }, '*');
+    }
+  };
+
+  const startSequence = () => {
+    if (hasStartedSequence) return;
+    hasStartedSequence = true;
+
+    if (reduceMotion.matches || !sequenceItems.length) {
+      sequenceItems.forEach((item) => item.classList.add('is-visible'));
+      finishSequence();
+      return;
+    }
+
+    sequenceItems.forEach((item, index) => {
+      const isLastItem = index === sequenceItems.length - 1;
+      revealDetailItemWithSpring(item, index * 120, isLastItem ? finishSequence : undefined);
+    });
+  };
+
+  if (skipEntryFade) {
+    sequenceItems.forEach((item) => item.classList.add('is-visible'));
+    hasStartedSequence = true;
+    beginScrollReveal();
+  } else if (isTransitionPreview) {
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'start-project-detail-reveal') startSequence();
+    });
   } else {
-    /* 모션 감소 설정 또는 구형 브라우저에서는 즉시 표시 */
-    revealSections.forEach((section) => section.classList.add('is-visible'));
+    requestAnimationFrame(() => requestAnimationFrame(startSequence));
   }
 }
 
@@ -349,98 +550,87 @@ const playContentRipple = (thumb, event, onComplete) => {
 
 const startProjectPageTransition = (thumb) => {
   const destination = thumb.href;
-  const rect = thumb.getBoundingClientRect();
-  const transitionLayer = document.createElement('div');
-  const sourceImage = thumb.querySelector('img');
-  const clonedImage = sourceImage ? sourceImage.cloneNode(true) : null;
-  const transitionDim = clonedImage ? document.createElement('div') : null;
-  const startingArea = Math.max(rect.width * rect.height, 1);
-  const startingRadius = Number.parseFloat(getComputedStyle(thumb).borderRadius) || 0;
-  const targetWidth = window.innerWidth;
-  const targetHeight = window.innerHeight;
+  const currentPage = document.querySelector('.app');
+  const detailPage = document.createElement('iframe');
+  const TRANSITION_TIMEOUT_MS = 5000;
   let hasNavigated = false;
 
-  transitionLayer.className = 'page-transition';
-  transitionLayer.setAttribute('aria-hidden', 'true');
-  transitionLayer.style.top = `${rect.top}px`;
-  transitionLayer.style.left = `${rect.left}px`;
-  transitionLayer.style.width = `${rect.width}px`;
-  transitionLayer.style.height = `${rect.height}px`;
-  transitionLayer.style.borderRadius = getComputedStyle(thumb).borderRadius;
-  transitionLayer.style.backgroundColor = getComputedStyle(thumb).backgroundColor;
-
-  if (clonedImage) {
-    transitionLayer.append(clonedImage);
-    transitionDim.className = 'page-transition-dim';
-    transitionLayer.append(transitionDim);
+  if (!currentPage) {
+    window.location.href = destination;
+    return;
   }
 
-  document.body.append(transitionLayer);
+  detailPage.className = 'page-transition-detail';
+  detailPage.setAttribute('aria-hidden', 'true');
+  detailPage.tabIndex = -1;
+
+  const handleDetailRevealComplete = (event) => {
+    if (event.source !== detailPage.contentWindow
+      || event.data?.type !== 'project-detail-reveal-complete') return;
+    navigate();
+  };
 
   const navigate = () => {
     if (hasNavigated) return;
     hasNavigated = true;
+    window.removeEventListener('message', handleDetailRevealComplete);
+    sessionStorage.setItem('project-transition-destination', destination);
     window.location.href = destination;
   };
 
-  /* CSS transition 대신 spring basic 물리값으로 박스의 위치와 크기를 계산합니다. */
-  const { stiffness, damping, mass } = SPRING_BASIC;
-  const startedAt = performance.now();
-  let previousTime = startedAt;
-  let progress = 0;
-  let velocity = 0;
+  window.addEventListener('message', handleDetailRevealComplete);
 
-  const renderPageTransition = (time) => {
-    const deltaTime = Math.min(Math.max((time - previousTime) / 1000, 0), 1 / 30);
-    previousTime = time;
+  const stepSpring = (state, spring, deltaTime) => {
+    const springForce = -spring.stiffness * (state.value - 1);
+    const dampingForce = -spring.damping * state.velocity;
+    const acceleration = (springForce + dampingForce) / spring.mass;
 
-    const springForce = -stiffness * (progress - 1);
-    const dampingForce = -damping * velocity;
-    const acceleration = (springForce + dampingForce) / mass;
-
-    velocity += acceleration * deltaTime;
-    progress += velocity * deltaTime;
-
-    const visibleProgress = Math.min(1, Math.max(0, progress));
-    const currentTop = rect.top * (1 - visibleProgress);
-    const currentLeft = rect.left * (1 - visibleProgress);
-    const currentWidth = rect.width + ((targetWidth - rect.width) * visibleProgress);
-    const currentHeight = rect.height + ((targetHeight - rect.height) * visibleProgress);
-    const currentRadius = startingRadius * (1 - visibleProgress);
-
-    transitionLayer.style.top = `${currentTop}px`;
-    transitionLayer.style.left = `${currentLeft}px`;
-    transitionLayer.style.width = `${currentWidth}px`;
-    transitionLayer.style.height = `${currentHeight}px`;
-    transitionLayer.style.borderRadius = `${currentRadius}px`;
-
-    /* 박스 면적이 시작 크기의 2배가 되는 순간 이미지가 완전히 사라집니다. */
-    if (clonedImage) {
-      const areaRatio = (currentWidth * currentHeight) / startingArea;
-      const imageOpacity = Math.max(0, Math.min(1, 2 - areaRatio));
-      clonedImage.style.opacity = `${imageOpacity}`;
-      transitionDim.style.opacity = imageOpacity > 0 ? '1' : '0';
-    }
-
-    const isSettled = Math.abs(1 - progress) <= 0.001 && Math.abs(velocity) <= 0.001;
-    const timedOut = time - startedAt >= PAGE_TRANSITION_MAX_MS;
-
-    if (!isSettled && !timedOut) {
-      requestAnimationFrame(renderPageTransition);
-      return;
-    }
-
-    transitionLayer.style.top = '0';
-    transitionLayer.style.left = '0';
-    transitionLayer.style.width = `${targetWidth}px`;
-    transitionLayer.style.height = `${targetHeight}px`;
-    transitionLayer.style.borderRadius = '0';
-    transitionLayer.style.backgroundColor = '#ffffff';
-    navigate();
+    state.velocity += acceleration * deltaTime;
+    state.value += state.velocity * deltaTime;
   };
 
-  requestAnimationFrame(renderPageTransition);
-  window.setTimeout(navigate, PAGE_TRANSITION_MAX_MS + 100);
+  detailPage.addEventListener('load', () => {
+    document.body.classList.add('is-page-leaving');
+
+    const startedAt = performance.now();
+    const oldPage = { value: 0, velocity: 0 };
+    let previousTime = startedAt;
+
+    const renderPageTransition = (time) => {
+      const deltaTime = Math.min(Math.max((time - previousTime) / 1000, 0), 1 / 30);
+      previousTime = time;
+
+      stepSpring(oldPage, SPRING_SLOW, deltaTime);
+
+      const oldProgress = Math.min(1, Math.max(0, oldPage.value));
+      /* spring slow 시작 후 약 1.2초에 화면을 0%로 고정하고 다음 시퀀스를 시작합니다. */
+      const oldSettled = oldProgress >= 0.993;
+
+      currentPage.style.opacity = String(1 - oldProgress);
+      currentPage.style.transform = `translateZ(0) scale(${1 - oldProgress * 0.06})`;
+
+      if (!oldSettled) {
+        requestAnimationFrame(renderPageTransition);
+        return;
+      }
+
+      currentPage.style.opacity = '0';
+      currentPage.style.transform = 'translateZ(0) scale(0.94)';
+
+      /* 기존 화면이 0%로 렌더링된 다음 프레임부터 상세 페이지 시퀀스를 시작합니다. */
+      requestAnimationFrame(() => {
+        detailPage.style.opacity = '1';
+        detailPage.contentWindow?.postMessage({ type: 'start-project-detail-reveal' }, '*');
+      });
+    };
+
+    requestAnimationFrame(renderPageTransition);
+    window.setTimeout(navigate, TRANSITION_TIMEOUT_MS + 100);
+  }, { once: true });
+
+  detailPage.addEventListener('error', navigate, { once: true });
+  detailPage.src = destination;
+  document.body.append(detailPage);
 };
 
 projectThumbs.forEach((thumb) => {
@@ -451,10 +641,9 @@ projectThumbs.forEach((thumb) => {
 
     event.preventDefault();
 
-    if (document.querySelector('.page-transition')
-      || document.querySelector('.thumb.is-content-rippling')) return;
+    if (document.querySelector('.page-transition-detail')) return;
 
-    playContentRipple(thumb, event, () => startProjectPageTransition(thumb));
+    startProjectPageTransition(thumb);
   });
 });
 

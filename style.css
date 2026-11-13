@@ -6,6 +6,12 @@
   --thumb: #D9D9D9;
   --bg: #ffffff;
 
+  /* Motion easing tokens */
+  --ease: cubic-bezier(0.6, 0, 0, 0.6);
+  --out: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --back: cubic-bezier(0.34, 1.56, 0.64, 1);
+
   /* 모든 간격은 이 값(4의 배수)을 기준으로 맞춰요 */
   --space: 24px;
 
@@ -247,7 +253,7 @@ a {
 
 /* 이미지가 들어간 첫 번째 박스의 배경색 */
 .thumb-white {
-  background: #ffffff;
+  background: #1C1E22;
 }
 
 .thumb:hover::after,
@@ -260,6 +266,17 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 커서 위치를 따라 이미지 안쪽 콘텐츠만 아주 작게 이동합니다. */
+.thumb > img {
+  transform: translate3d(
+      var(--cursor-image-x, 0px),
+      var(--cursor-image-y, 0px),
+      0
+    );
+  transform-origin: center;
+  will-change: transform;
 }
 
 .info h3 {
@@ -344,6 +361,10 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .thumb > img {
+    transform: none !important;
+  }
+
   .project-link::after {
     animation: none !important;
   }
@@ -354,6 +375,27 @@ a {
 }
 
 /* ---------- PROJECT PAGE TRANSITION ---------- */
+.page-transition-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+body.is-page-leaving .app {
+  position: relative;
+  z-index: 1000;
+  transform-origin: center;
+  will-change: opacity, transform;
+}
+
 .page-transition {
   position: fixed;
   z-index: 1000;
@@ -409,7 +451,6 @@ body.project-detail-page {
   width: min(100%, 1240px);
   margin: 0 auto;
   padding: 72px;
-  transition: opacity 240ms ease-in;
 }
 
 /* 페이지 전환 완료 후 상세 콘텐츠, 이전 버튼, 카피라이트 표시 */
@@ -594,16 +635,15 @@ body.project-detail-page {
   gap: calc(var(--space) * 2);
 }
 
-/* 스크롤 전 섹션 상태: 이동 거리와 등장 시간을 여기서 조절하세요. */
+/* 상세 페이지 내부 요소는 JS의 spring basic으로 순차 등장합니다. */
+.detail-sequence-item,
 .case-reveal {
   opacity: 0;
   transform: translateY(12px);
-  transition:
-    opacity 450ms ease,
-    transform 450ms ease;
 }
 
-/* 화면에 들어온 섹션의 최종 표시 상태 */
+/* 순차 등장 또는 스크롤 등장 모션이 끝난 최종 상태 */
+.detail-sequence-item.is-visible,
 .case-reveal.is-visible {
   opacity: 1;
   transform: none;
@@ -868,6 +908,7 @@ body.project-detail-page {
   .case-study,
   .project-detail-page .back-button,
   .project-detail-page .copy,
+  .detail-sequence-item,
   .case-reveal {
     opacity: 1;
     transform: none;
