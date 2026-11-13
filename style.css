@@ -192,9 +192,18 @@ a {
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.pills .pill:hover {
+.pills .pill:focus-visible,
+.pills .pill:active,
+.pills .pill.is-pressed {
   background: var(--text);
   color: #ffffff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pills .pill:hover {
+    background: var(--text);
+    color: #ffffff;
+  }
 }
 
 /* LinkedIn / Email 버튼 패딩 */

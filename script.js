@@ -8,6 +8,7 @@ const projectThumbs = [...document.querySelectorAll('.thumb')];
 const projectItems = [...document.querySelectorAll('.project')];
 const emailCopyButton = document.querySelector('.email-copy');
 const copyToast = document.querySelector('.copy-toast');
+const contactButtons = [...document.querySelectorAll('.pills .pill')];
 
 let copyToastTimer = 0;
 
@@ -44,6 +45,20 @@ const copyText = async (text) => {
 emailCopyButton?.addEventListener('click', async () => {
   await copyText(emailCopyButton.dataset.email || '');
   showCopyToast();
+});
+
+contactButtons.forEach((button) => {
+  const clearPressedState = () => button.classList.remove('is-pressed');
+
+  button.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'touch') {
+      button.classList.add('is-pressed');
+    }
+  });
+
+  button.addEventListener('pointerup', clearPressedState);
+  button.addEventListener('pointercancel', clearPressedState);
+  button.addEventListener('pointerleave', clearPressedState);
 });
 
 /* ================= 공통 모션 토큰 ================= */
