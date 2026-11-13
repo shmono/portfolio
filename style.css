@@ -727,7 +727,7 @@ body.project-detail-page {
 }
 
 /* ---------- 좁은 화면 (태블릿/모바일): 상단 탭으로 섹션 전환 ---------- */
-@media (max-width: 1000px) {
+@media (max-width: 1200px) {
   body {
     overflow: auto;
   }
