@@ -234,10 +234,7 @@ a {
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transform: translate(-50%, calc(-100% + 8px));
-  transition:
-    opacity 250ms var(--out),
-    transform 250ms var(--out);
+  transform: translate(-50%, calc(-100% + 4px));
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
@@ -257,11 +254,6 @@ a {
   border-right: 6px solid transparent;
   border-left: 6px solid transparent;
   transform: translateX(-50%);
-}
-
-.copy-toast.is-visible {
-  opacity: 1;
-  transform: translate(-50%, -100%);
 }
 
 /* ---------- 리스트 공통 (Projects / Resume) ---------- */
@@ -404,10 +396,6 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .copy-toast {
-    transition: none;
-  }
-
   .thumb > img {
     transform: none !important;
   }

@@ -11,18 +11,84 @@ const copyToast = document.querySelector('.copy-toast');
 const contactButtons = [...document.querySelectorAll('.pills .pill')];
 
 let copyToastTimer = 0;
+let copyToastAnimationFrame = 0;
+let copyToastProgress = 0;
+let copyToastVelocity = 0;
+let copyToastTarget = 0;
+let copyToastPreviousTime = 0;
+
+const applyCopyToastFrame = (progress) => {
+  if (!copyToast) return;
+
+  const visibleProgress = Math.min(1, Math.max(0, progress));
+
+  copyToast.style.opacity = String(visibleProgress);
+  copyToast.style.transform = `translate(-50%, calc(-100% + ${(1 - visibleProgress) * 4}px))`;
+};
+
+const renderCopyToast = (time) => {
+  if (!copyToast) return;
+
+  const deltaTime = Math.min(Math.max((time - copyToastPreviousTime) / 1000, 0), 1 / 30);
+  const { stiffness, damping, mass } = MOTION_SPRING.basic;
+  copyToastPreviousTime = time;
+
+  const springForce = -stiffness * (copyToastProgress - copyToastTarget);
+  const dampingForce = -damping * copyToastVelocity;
+  const acceleration = (springForce + dampingForce) / mass;
+
+  copyToastVelocity += acceleration * deltaTime;
+  copyToastProgress += copyToastVelocity * deltaTime;
+
+  applyCopyToastFrame(copyToastProgress);
+
+  const isSettled = Math.abs(copyToastTarget - copyToastProgress) < 0.001
+    && Math.abs(copyToastVelocity) < 0.001;
+
+  if (isSettled) {
+    copyToastProgress = copyToastTarget;
+    copyToastVelocity = 0;
+    applyCopyToastFrame(copyToastTarget);
+    copyToast.classList.toggle('is-visible', copyToastTarget === 1);
+    copyToastAnimationFrame = 0;
+    return;
+  }
+
+  copyToastAnimationFrame = requestAnimationFrame(renderCopyToast);
+};
+
+const setCopyToastVisible = (isVisible) => {
+  if (!copyToast) return;
+
+  copyToastTarget = isVisible ? 1 : 0;
+  copyToast.classList.toggle('is-visible', isVisible);
+
+  if (reduceMotion.matches) {
+    if (copyToastAnimationFrame) cancelAnimationFrame(copyToastAnimationFrame);
+    copyToastAnimationFrame = 0;
+    copyToastProgress = copyToastTarget;
+    copyToastVelocity = 0;
+    applyCopyToastFrame(copyToastTarget);
+    return;
+  }
+
+  if (!copyToastAnimationFrame) {
+    copyToastPreviousTime = performance.now();
+    copyToastAnimationFrame = requestAnimationFrame(renderCopyToast);
+  }
+};
 
 const showCopyToast = () => {
   if (!copyToast || !emailCopyButton) return;
 
   const buttonRect = emailCopyButton.getBoundingClientRect();
   copyToast.style.setProperty('--toast-left', `${buttonRect.left + buttonRect.width / 2}px`);
-  copyToast.style.setProperty('--toast-top', `${buttonRect.top - 10}px`);
+  copyToast.style.setProperty('--toast-top', `${buttonRect.top - 14}px`);
 
   window.clearTimeout(copyToastTimer);
-  copyToast.classList.add('is-visible');
+  setCopyToastVisible(true);
   copyToastTimer = window.setTimeout(() => {
-    copyToast.classList.remove('is-visible');
+    setCopyToastVisible(false);
   }, 1600);
 };
 
