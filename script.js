@@ -6,6 +6,45 @@ const sectionPanels = [...document.querySelectorAll('.col-projects, .col-resume'
 const sectionTabsPill = document.querySelector('.t-tabs-pill');
 const projectThumbs = [...document.querySelectorAll('.thumb')];
 const projectItems = [...document.querySelectorAll('.project')];
+const emailCopyButton = document.querySelector('.email-copy');
+const copyToast = document.querySelector('.copy-toast');
+
+let copyToastTimer = 0;
+
+const showCopyToast = () => {
+  if (!copyToast || !emailCopyButton) return;
+
+  const buttonRect = emailCopyButton.getBoundingClientRect();
+  copyToast.style.setProperty('--toast-left', `${buttonRect.left + buttonRect.width / 2}px`);
+  copyToast.style.setProperty('--toast-top', `${buttonRect.top - 10}px`);
+
+  window.clearTimeout(copyToastTimer);
+  copyToast.classList.add('is-visible');
+  copyToastTimer = window.setTimeout(() => {
+    copyToast.classList.remove('is-visible');
+  }, 1600);
+};
+
+const copyText = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (error) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.setAttribute('readonly', '');
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    document.body.append(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    textArea.remove();
+  }
+};
+
+emailCopyButton?.addEventListener('click', async () => {
+  await copyText(emailCopyButton.dataset.email || '');
+  showCopyToast();
+});
 
 /* ================= 공통 모션 토큰 ================= */
 const MOTION_EASING = Object.freeze({

@@ -159,7 +159,7 @@ a {
 }
 
 .intro {
-  margin-top: 4px;
+  margin-top: 16px;
   color: var(--grey-700);
   word-break: keep-all;
 }
@@ -199,17 +199,60 @@ a {
 
 /* LinkedIn / Email 버튼 패딩 */
 .pills .pill {
-  padding: 4px 8px 4px 10px; /* 위 오른쪽 아래 왼쪽 */
+  padding: 4px 10px; /* 상하 좌우 */
 }
 
-.ico-ne {
+.email-copy {
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.copy-toast {
+  position: fixed;
+  top: var(--toast-top, 0);
+  left: var(--toast-left, 50%);
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(47, 47, 47, 0.5);
+  color: var(--grey-0);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% + 8px));
+  transition:
+    opacity 250ms var(--out),
+    transform 250ms var(--out);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.copy-toast-icon {
+  flex: none;
   width: 12px;
   height: 12px;
 }
 
-.ico-r {
-  width: 16px;
-  height: 12px;
+.copy-toast::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  border-top: 6px solid rgba(47, 47, 47, 0.5);
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  transform: translateX(-50%);
+}
+
+.copy-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -100%);
 }
 
 /* ---------- 리스트 공통 (Projects / Resume) ---------- */
@@ -352,6 +395,10 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .copy-toast {
+    transition: none;
+  }
+
   .thumb > img {
     transform: none !important;
   }
