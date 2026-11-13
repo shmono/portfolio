@@ -717,6 +717,7 @@ body.project-detail-page {
   color: var(--grey-600);
   font-size: 13px;
   line-height: 18px;
+  white-space: nowrap;
 }
 
 /* Experiences 항목을 추가하면 48px 간격으로 아래에 이어집니다. */
