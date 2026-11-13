@@ -854,7 +854,18 @@ body.project-detail-page {
   }
 
   .col-about {
-    border-bottom: 1px solid var(--line);
+    position: relative;
+    border-bottom: 0;
+  }
+
+  .col-about::after {
+    content: "";
+    position: absolute;
+    right: var(--page-gutter);
+    bottom: 0;
+    left: var(--page-gutter);
+    height: 1px;
+    background: var(--line);
   }
 
   .col-head {
