@@ -229,10 +229,16 @@ a {
   transition: background var(--project-dim-duration) var(--out);
 }
 
-.project:hover,
 .project:focus-visible,
-.project:active {
+.project:active,
+.project.is-pressed {
   background: var(--grey-100);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .project:hover {
+    background: var(--grey-100);
+  }
 }
 
 .col-projects .project:last-child,
@@ -333,10 +339,16 @@ a {
   transition: background var(--project-dim-duration) var(--out);
 }
 
-.project:hover .project-chip,
 .project:focus-visible .project-chip,
-.project:active .project-chip {
+.project:active .project-chip,
+.project.is-pressed .project-chip {
   background: var(--grey-200);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .project:hover .project-chip {
+    background: var(--grey-200);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

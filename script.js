@@ -656,6 +656,18 @@ const startProjectPageTransition = (project) => {
 };
 
 projectItems.forEach((project) => {
+  const clearPressedState = () => project.classList.remove('is-pressed');
+
+  project.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'touch') {
+      project.classList.add('is-pressed');
+    }
+  });
+
+  project.addEventListener('pointerup', clearPressedState);
+  project.addEventListener('pointercancel', clearPressedState);
+  project.addEventListener('pointerleave', clearPressedState);
+
   project.addEventListener('click', (event) => {
     const isModifiedClick = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
 
