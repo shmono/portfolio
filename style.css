@@ -711,7 +711,7 @@ body.project-detail-page {
 .value .date {
   display: table;
   margin-top: 12px;
-  padding: 5px 10px;
+  padding: 4px 8px;
   border-radius: 8px;
   background: var(--grey-100);
   color: var(--grey-600);
