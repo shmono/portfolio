@@ -1,7 +1,9 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
 :root {
+  --grey-100: #F4F4F4;
   --grey-300: #D1D1D1;
+  --grey-600: #676767;
   --grey-950: #171717;
 
   --text: var(--grey-950);
@@ -693,14 +695,28 @@ body.project-detail-page {
 }
 
 /* Resume의 학교명과 경력명 굵기 */
+.value > p,
+.experience-item > p {
+  color: var(--grey-600);
+  font-size: 15px;
+  line-height: 22px;
+}
+
 .value strong {
+  color: var(--grey-950);
+  font-size: 15px;
   font-weight: 600;
 }
 
 .value .date {
-  margin-top: 4px;
-  font-size: 16px;
-  line-height: 20px;
+  display: table;
+  margin-top: 12px;
+  padding: 5px 10px;
+  border-radius: 12px;
+  background: var(--grey-100);
+  color: var(--grey-600);
+  font-size: 13px;
+  line-height: 18px;
 }
 
 /* Experiences 항목을 추가하면 48px 간격으로 아래에 이어집니다. */
