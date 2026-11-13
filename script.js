@@ -579,7 +579,8 @@ const startProjectPageTransition = (thumb) => {
   const navigate = () => {
     if (hasNavigated) return;
     hasNavigated = true;
-    resetMainPageAfterTransition();
+
+    /* 새 문서가 표시될 때까지 기존 화면을 opacity 0으로 유지해 순간 노출을 막습니다. */
     window.location.href = destination;
   };
 
