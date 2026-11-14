@@ -56,7 +56,6 @@
   --project-dim-duration: 120ms;
   --project-button-duration: 120ms;
   --project-button-blur: 10px;
-  --project-shine-cycle: 1050ms; /* 700ms 이동 + 350ms 대기 */
   /* 상세 페이지 전환 중 이미지에 적용되는 블러 강도 */
   --project-dim-blur: 10px;
 
@@ -67,7 +66,6 @@
   padding: 0;
   box-sizing: border-box;
   letter-spacing: -0.03em; /* 전체 자간 -3% */
-  cursor: url("cursor.svg") 8 8, auto;
 }
 
 html,
@@ -165,6 +163,7 @@ a {
 }
 
 .pills {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -218,7 +217,7 @@ a {
 }
 
 .copy-toast {
-  position: fixed;
+  position: absolute;
   top: var(--toast-top, 0);
   left: var(--toast-left, 50%);
   z-index: 60;
@@ -263,14 +262,36 @@ a {
 
 /* ---------- PROJECTS ---------- */
 .project {
+  position: relative;
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr) minmax(180px, 31%);
   gap: var(--space);
   align-items: start;
   margin: 0 calc(var(--page-gutter) * -1);
   padding: 16px var(--page-gutter);
-  border-bottom: 1px solid var(--line);
   transition: background var(--project-dim-duration) var(--out);
+}
+
+.col-projects .col-head h2 {
+  position: relative;
+  border-bottom: 0;
+}
+
+.col-projects .col-head h2::after,
+.project:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--grey-0) 0 var(--page-gutter),
+    var(--line) var(--page-gutter) calc(100% - var(--page-gutter)),
+    var(--grey-0) calc(100% - var(--page-gutter)) 100%
+  );
+  pointer-events: none;
 }
 
 .project:focus-visible,
@@ -847,6 +868,7 @@ body.project-detail-page {
   .t-tab {
     position: relative;
     z-index: 1;
+    cursor: pointer;
     height: 36px;
     padding: 4px 16px;
     border: 0;
@@ -913,7 +935,12 @@ body.project-detail-page {
     bottom: 0;
     left: 0;
     height: 1px;
-    background: var(--line);
+    background: linear-gradient(
+      to right,
+      var(--grey-0) 0 var(--page-gutter),
+      var(--line) var(--page-gutter) calc(100% - var(--page-gutter)),
+      var(--grey-0) calc(100% - var(--page-gutter)) 100%
+    );
   }
 
   .col-head {

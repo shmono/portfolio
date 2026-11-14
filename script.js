@@ -81,9 +81,11 @@ const setCopyToastVisible = (isVisible) => {
 const showCopyToast = () => {
   if (!copyToast || !emailCopyButton) return;
 
-  const buttonRect = emailCopyButton.getBoundingClientRect();
-  copyToast.style.setProperty('--toast-left', `${buttonRect.left + buttonRect.width / 2}px`);
-  copyToast.style.setProperty('--toast-top', `${buttonRect.top - 14}px`);
+  copyToast.style.setProperty(
+    '--toast-left',
+    `${emailCopyButton.offsetLeft + emailCopyButton.offsetWidth / 2}px`,
+  );
+  copyToast.style.setProperty('--toast-top', `${emailCopyButton.offsetTop - 14}px`);
 
   window.clearTimeout(copyToastTimer);
   setCopyToastVisible(true);
