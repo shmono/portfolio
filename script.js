@@ -7,90 +7,153 @@ const sectionTabsPill = document.querySelector('.t-tabs-pill');
 const projectThumbs = [...document.querySelectorAll('.thumb')];
 const projectItems = [...document.querySelectorAll('.project')];
 const emailCopyButton = document.querySelector('.email-copy');
-const copyToast = document.querySelector('.copy-toast');
 const contactButtons = [...document.querySelectorAll('.pills .pill')];
 
-let copyToastTimer = 0;
-let copyToastAnimationFrame = 0;
-let copyToastProgress = 0;
-let copyToastVelocity = 0;
-let copyToastTarget = 0;
-let copyToastPreviousTime = 0;
+let emailCopyFeedbackTimer = 0;
+let emailCopyDefaultWidth = 0;
+let emailCopySuccessWidth = 0;
+let emailCopyAnimationFrame = 0;
+let emailCopyProgress = 0;
+let emailCopyVelocity = 0;
+let emailCopyPreviousTime = 0;
+let emailCopyPhase = 'to-email';
 
-const applyCopyToastFrame = (progress) => {
-  if (!copyToast) return;
+const measureEmailCopyStates = () => {
+  if (!emailCopyButton || emailCopyDefaultWidth) return;
 
-  const visibleProgress = Math.min(1, Math.max(0, progress));
+  const success = emailCopyButton.querySelector('.email-copy-success');
+  const styles = getComputedStyle(emailCopyButton);
+  const horizontalChrome = parseFloat(styles.paddingLeft)
+    + parseFloat(styles.paddingRight)
+    + parseFloat(styles.borderLeftWidth)
+    + parseFloat(styles.borderRightWidth);
 
-  copyToast.style.opacity = String(visibleProgress);
-  copyToast.style.transform = `translate(-50%, calc(-100% + ${(1 - visibleProgress) * 4}px))`;
+  emailCopyDefaultWidth = emailCopyButton.getBoundingClientRect().width;
+  emailCopySuccessWidth = (success?.scrollWidth || 0) + horizontalChrome;
 };
 
-const renderCopyToast = (time) => {
-  if (!copyToast) return;
+const applyEmailCopyFrame = (progress) => {
+  if (!emailCopyButton) return;
 
-  const deltaTime = Math.min(Math.max((time - copyToastPreviousTime) / 1000, 0), 1 / 30);
-  const { stiffness, damping, mass } = MOTION_SPRING.basic;
-  copyToastPreviousTime = time;
+  const springProgress = Math.min(1, Math.max(0, progress));
+  const label = emailCopyButton.querySelector('.email-copy-label');
+  const success = emailCopyButton.querySelector('.email-copy-success');
+  const check = emailCopyButton.querySelector('.email-copy-check path');
+  const isShowingCopied = emailCopyPhase === 'to-copied';
+  const widthProgress = isShowingCopied ? springProgress : 1 - springProgress;
+  const width = emailCopyDefaultWidth
+    + (emailCopySuccessWidth - emailCopyDefaultWidth) * widthProgress;
 
-  const springForce = -stiffness * (copyToastProgress - copyToastTarget);
-  const dampingForce = -damping * copyToastVelocity;
+  emailCopyButton.style.width = `${width}px`;
+
+  if (isShowingCopied) {
+    label.style.opacity = String(1 - springProgress);
+    label.style.transform = `translateY(${-8 * springProgress}px) scale(${1 - 0.04 * springProgress})`;
+    success.style.opacity = String(springProgress);
+    success.style.transform = `translate(-50%, calc(-50% + ${8 * (1 - springProgress)}px)) scale(${0.96 + 0.04 * springProgress})`;
+    check.style.strokeDashoffset = String(12 * (1 - springProgress));
+    return;
+  }
+
+  success.style.opacity = String(1 - springProgress);
+  success.style.transform = `translate(-50%, calc(-50% - ${8 * springProgress}px)) scale(${1 - 0.04 * springProgress})`;
+  label.style.opacity = String(springProgress);
+  label.style.transform = `translateY(${8 * (1 - springProgress)}px) scale(${0.96 + 0.04 * springProgress})`;
+  check.style.strokeDashoffset = '0';
+};
+
+const finishEmailCopyReset = () => {
+  if (!emailCopyButton) return;
+
+  const label = emailCopyButton.querySelector('.email-copy-label');
+  const success = emailCopyButton.querySelector('.email-copy-success');
+  const check = emailCopyButton.querySelector('.email-copy-check path');
+
+  emailCopyButton.classList.remove('is-copied');
+  emailCopyButton.classList.remove('is-returning');
+  emailCopyButton.setAttribute('aria-label', '이메일 주소 복사');
+  emailCopyButton.style.removeProperty('width');
+  label.style.removeProperty('opacity');
+  label.style.removeProperty('transform');
+  success.style.removeProperty('opacity');
+  success.style.removeProperty('transform');
+  check.style.removeProperty('stroke-dashoffset');
+};
+
+const renderEmailCopySpring = (time) => {
+  if (!emailCopyButton) return;
+
+  const deltaTime = Math.min(Math.max((time - emailCopyPreviousTime) / 1000, 0), 1 / 30);
+  const { stiffness, damping, mass } = MOTION_SPRING.small;
+  emailCopyPreviousTime = time;
+
+  const springForce = -stiffness * (emailCopyProgress - 1);
+  const dampingForce = -damping * emailCopyVelocity;
   const acceleration = (springForce + dampingForce) / mass;
 
-  copyToastVelocity += acceleration * deltaTime;
-  copyToastProgress += copyToastVelocity * deltaTime;
+  emailCopyVelocity += acceleration * deltaTime;
+  emailCopyProgress += emailCopyVelocity * deltaTime;
+  applyEmailCopyFrame(emailCopyProgress);
 
-  applyCopyToastFrame(copyToastProgress);
+  const isSettled = Math.abs(1 - emailCopyProgress) < 0.001
+    && Math.abs(emailCopyVelocity) < 0.01;
 
-  const isSettled = Math.abs(copyToastTarget - copyToastProgress) < 0.001
-    && Math.abs(copyToastVelocity) < 0.001;
-
-  if (isSettled) {
-    copyToastProgress = copyToastTarget;
-    copyToastVelocity = 0;
-    applyCopyToastFrame(copyToastTarget);
-    copyToast.classList.toggle('is-visible', copyToastTarget === 1);
-    copyToastAnimationFrame = 0;
+  if (!isSettled) {
+    emailCopyAnimationFrame = requestAnimationFrame(renderEmailCopySpring);
     return;
   }
 
-  copyToastAnimationFrame = requestAnimationFrame(renderCopyToast);
+  emailCopyProgress = 1;
+  emailCopyVelocity = 0;
+  emailCopyAnimationFrame = 0;
+  applyEmailCopyFrame(1);
+
+  if (emailCopyPhase === 'to-email') finishEmailCopyReset();
 };
 
-const setCopyToastVisible = (isVisible) => {
-  if (!copyToast) return;
+const animateEmailCopyPhase = (phase) => {
+  if (!emailCopyButton) return;
 
-  copyToastTarget = isVisible ? 1 : 0;
-  copyToast.classList.toggle('is-visible', isVisible);
+  if (emailCopyAnimationFrame) cancelAnimationFrame(emailCopyAnimationFrame);
+  emailCopyAnimationFrame = 0;
+  emailCopyPhase = phase;
+  emailCopyProgress = 0;
+  emailCopyVelocity = 0;
+
+  if (phase === 'to-email') {
+    emailCopyButton.classList.remove('is-copied');
+    emailCopyButton.classList.add('is-returning');
+    emailCopyButton.setAttribute('aria-label', '이메일 주소 복사');
+  }
 
   if (reduceMotion.matches) {
-    if (copyToastAnimationFrame) cancelAnimationFrame(copyToastAnimationFrame);
-    copyToastAnimationFrame = 0;
-    copyToastProgress = copyToastTarget;
-    copyToastVelocity = 0;
-    applyCopyToastFrame(copyToastTarget);
+    emailCopyProgress = 1;
+    emailCopyVelocity = 0;
+    applyEmailCopyFrame(1);
+    if (phase === 'to-email') finishEmailCopyReset();
     return;
   }
 
-  if (!copyToastAnimationFrame) {
-    copyToastPreviousTime = performance.now();
-    copyToastAnimationFrame = requestAnimationFrame(renderCopyToast);
-  }
+  applyEmailCopyFrame(0);
+  emailCopyPreviousTime = performance.now();
+  emailCopyAnimationFrame = requestAnimationFrame(renderEmailCopySpring);
 };
 
-const showCopyToast = () => {
-  if (!copyToast || !emailCopyButton) return;
+const showEmailCopyFeedback = () => {
+  if (!emailCopyButton) return;
 
-  copyToast.style.setProperty(
-    '--toast-left',
-    `${emailCopyButton.offsetLeft + emailCopyButton.offsetWidth / 2}px`,
-  );
-  copyToast.style.setProperty('--toast-top', `${emailCopyButton.offsetTop - 14}px`);
+  measureEmailCopyStates();
+  window.clearTimeout(emailCopyFeedbackTimer);
 
-  window.clearTimeout(copyToastTimer);
-  setCopyToastVisible(true);
-  copyToastTimer = window.setTimeout(() => {
-    setCopyToastVisible(false);
+  if (!emailCopyButton.classList.contains('is-copied') || emailCopyPhase === 'to-email') {
+    emailCopyButton.classList.remove('is-returning');
+    emailCopyButton.classList.add('is-copied');
+    emailCopyButton.setAttribute('aria-label', '이메일 주소 복사 완료');
+    animateEmailCopyPhase('to-copied');
+  }
+
+  emailCopyFeedbackTimer = window.setTimeout(() => {
+    animateEmailCopyPhase('to-email');
   }, 1600);
 };
 
@@ -112,7 +175,7 @@ const copyText = async (text) => {
 
 emailCopyButton?.addEventListener('click', async () => {
   await copyText(emailCopyButton.dataset.email || '');
-  showCopyToast();
+  showEmailCopyFeedback();
 });
 
 contactButtons.forEach((button) => {

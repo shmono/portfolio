@@ -211,48 +211,75 @@ a {
 }
 
 .email-copy {
+  position: relative;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
   background: transparent;
   color: inherit;
   font: inherit;
+  white-space: nowrap;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 
-.copy-toast {
-  position: absolute;
-  top: var(--toast-top, 0);
-  left: var(--toast-left, 50%);
-  z-index: 60;
+.email-copy.is-copied {
+  background: var(--text);
+  color: var(--grey-0);
+}
+
+.pills .email-copy.is-returning,
+.pills .email-copy.is-returning:hover {
+  background: transparent;
+  color: inherit;
+}
+
+.email-copy-label,
+.email-copy-success {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(47, 47, 47, 0.5);
-  color: var(--grey-0);
-  font-size: 14px;
-  line-height: 20px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, calc(-100% + 4px));
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  justify-content: center;
 }
 
-.copy-toast-icon {
+.email-copy-label {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.email-copy-success {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  gap: 4px;
+  opacity: 0;
+  transform: translate(-50%, calc(-50% + 8px)) scale(0.96);
+}
+
+.email-copy.is-copied .email-copy-label {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+}
+
+.email-copy.is-copied .email-copy-success {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.email-copy-check {
   flex: none;
   width: 12px;
   height: 12px;
 }
 
-.copy-toast::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  border-top: 6px solid rgba(47, 47, 47, 0.5);
-  border-right: 6px solid transparent;
-  border-left: 6px solid transparent;
-  transform: translateX(-50%);
+.email-copy-check path {
+  stroke-dasharray: 12;
+  stroke-dashoffset: 12;
+}
+
+.email-copy.is-copied .email-copy-check path {
+  stroke-dashoffset: 0;
 }
 
 /* ---------- 리스트 공통 (Projects / Resume) ---------- */
@@ -417,6 +444,13 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .email-copy,
+  .email-copy-label,
+  .email-copy-success,
+  .email-copy-check path {
+    transition: none;
+  }
+
   .thumb > img {
     transform: none !important;
   }
