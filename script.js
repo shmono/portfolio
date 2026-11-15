@@ -1,6 +1,6 @@
 const PAGE_TRANSITION_MAX_MS = 1600;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const mobileLayout = window.matchMedia('(max-width: 1200px)');
+const mobileLayout = window.matchMedia('(max-width: 1300px)');
 const sectionTabs = [...document.querySelectorAll('.section-tab')];
 const sectionPanels = [...document.querySelectorAll('.col-projects, .col-resume')];
 const sectionTabsPill = document.querySelector('.t-tabs-pill');
@@ -17,6 +17,100 @@ let emailCopyProgress = 0;
 let emailCopyVelocity = 0;
 let emailCopyPreviousTime = 0;
 let emailCopyPhase = 'to-email';
+
+/* ================= 전역 클릭 파티클 ================= */
+/* ch.sh처럼 클릭 지점 주변의 작은 점들이 짧게 퍼졌다가 사라집니다. */
+const setupClickBurst = () => {
+  if (reduceMotion.matches) return;
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+
+  if (!context) return;
+
+  canvas.className = 'click-burst-canvas';
+  canvas.setAttribute('aria-hidden', 'true');
+  document.body.append(canvas);
+
+  const particles = [];
+  const PARTICLE_COUNT = 9;
+  const DURATION_MS = 620;
+  let pixelRatio = 1;
+  let animationFrame = 0;
+
+  const resizeCanvas = () => {
+    pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(window.innerWidth * pixelRatio));
+    canvas.height = Math.max(1, Math.round(window.innerHeight * pixelRatio));
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  };
+
+  const easeOutCubic = (value) => 1 - ((1 - value) ** 3);
+
+  const render = (time) => {
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    for (let index = particles.length - 1; index >= 0; index -= 1) {
+      const particle = particles[index];
+      const progress = Math.min(1, (time - particle.startedAt) / DURATION_MS);
+
+      if (progress >= 1) {
+        particles.splice(index, 1);
+        continue;
+      }
+
+      const travel = easeOutCubic(progress) * particle.distance;
+      const x = particle.x + Math.cos(particle.angle) * travel;
+      const y = particle.y + Math.sin(particle.angle) * travel + (progress ** 2) * 3;
+      const opacity = (1 - progress) ** 1.7;
+      const size = particle.size * (1 - progress * 0.32);
+
+      context.globalAlpha = opacity * particle.opacity;
+      context.fillStyle = '#676767';
+      context.beginPath();
+      context.arc(x, y, size, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    context.globalAlpha = 1;
+
+    if (particles.length) {
+      animationFrame = requestAnimationFrame(render);
+      return;
+    }
+
+    animationFrame = 0;
+  };
+
+  const createBurst = (event) => {
+    if (event.button !== 0 || event.isPrimary === false || reduceMotion.matches) return;
+
+    const startedAt = performance.now();
+    const angleOffset = Math.random() * Math.PI * 2;
+
+    for (let index = 0; index < PARTICLE_COUNT; index += 1) {
+      const angleJitter = (Math.random() - 0.5) * 0.24;
+
+      particles.push({
+        x: event.clientX,
+        y: event.clientY,
+        angle: angleOffset + (Math.PI * 2 * index) / PARTICLE_COUNT + angleJitter,
+        distance: 10 + Math.random() * 12,
+        size: 0.75 + Math.random() * 0.75,
+        opacity: 0.42 + Math.random() * 0.34,
+        startedAt,
+      });
+    }
+
+    if (!animationFrame) animationFrame = requestAnimationFrame(render);
+  };
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('pointerdown', createBurst, { passive: true });
+};
+
+setupClickBurst();
 
 const measureEmailCopyStates = () => {
   if (!emailCopyButton || emailCopyDefaultWidth) return;
